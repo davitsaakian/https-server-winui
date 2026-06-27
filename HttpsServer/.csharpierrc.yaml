@@ -1,0 +1,5 @@
+printWidth: 200
+useTabs: false
+tabWidth: 4
+indentSize: 4
+endOfLine: crlf

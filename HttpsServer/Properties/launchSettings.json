@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "HttpsServer (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "HttpsServer (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
