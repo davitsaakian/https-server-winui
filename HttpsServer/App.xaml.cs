@@ -1,25 +1,13 @@
-﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using HttpsServerWinUI.DependencyInjection;
+using HttpsServerWinUI.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Windows.Storage;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
-namespace HttpsServer
+namespace HttpsServerWinUI
 {
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -34,17 +22,47 @@ namespace HttpsServer
         /// </summary>
         public App()
         {
+            Services = ConfigureServices();
             InitializeComponent();
         }
+
+        public IServiceProvider Services { get; }
 
         /// <summary>
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
             _window = new MainWindow();
             _window.Activate();
+
+            try
+            {
+                await InitializeComponents();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+        }
+
+        private ServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+
+            services.UseMiniAppsSdkServices();
+
+            return services.BuildServiceProvider();
+        }
+
+        private async Task InitializeComponents()
+        {
+            var uri = new Uri("ms-appx:///Assets/HttpsCertificates/localhostCertificate.pfx");
+            var password = "password";
+
+            var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
+            await Services.GetService<IServerInitializationService>().Initialize(file, password);
         }
     }
 }

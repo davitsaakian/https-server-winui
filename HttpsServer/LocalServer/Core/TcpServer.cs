@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HttpsServer.LocalServer.Core
+namespace HttpsServerWinUI.LocalServer.Core
 {
     public abstract class TcpServer
     {

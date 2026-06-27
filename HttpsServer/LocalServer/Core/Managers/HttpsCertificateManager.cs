@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
-namespace HttpsServer.LocalServer.Core.Managers
+namespace HttpsServerWinUI.LocalServer.Core.Managers
 {
     internal class HttpsCertificateManager
     {

@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 
-namespace HttpsServer.LocalServer.Core.Models
+namespace HttpsServerWinUI.LocalServer.Core.Models
 {
     public class RequestModel
     {

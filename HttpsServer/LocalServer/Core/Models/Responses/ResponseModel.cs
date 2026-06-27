@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HttpsServer.LocalServer.Core.Models.Responses
+namespace HttpsServerWinUI.LocalServer.Core.Models.Responses
 {
     public class ResponseModel
     {

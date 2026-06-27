@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Windows.Storage.Streams;
 
-namespace HttpsServer.LocalServer.Managers
+namespace HttpsServerWinUI.LocalServer.Managers
 {
     public interface IServerFileStorageManager
     {

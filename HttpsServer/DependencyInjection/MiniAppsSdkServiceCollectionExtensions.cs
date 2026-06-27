@@ -1,26 +1,15 @@
-using System;
-using HttpsServer.LocalServer.Core.Middleware;
-using HttpsServer.LocalServer.Managers;
-using HttpsServer.LocalServer.ResourcesLocalServer.Controllers;
+using HttpsServerWinUI.LocalServer.Core;
+using HttpsServerWinUI.LocalServer.Core.Middleware;
+using HttpsServerWinUI.LocalServer.Managers;
+using HttpsServerWinUI.LocalServer.ResourcesLocalServer.Controllers;
+using HttpsServerWinUI.Services;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace HttpsServer.DependencyInjection
+namespace HttpsServerWinUI.DependencyInjection
 {
     public static class MiniAppsSdkServiceCollectionExtensions
     {
         public static void UseMiniAppsSdkServices(this IServiceCollection collection)
-        {
-            UseResourcesServerServices(collection);
-
-            collection.AddTransient<IMiniAppSharedStorageManager, MiniAppSharedStorageManager>();
-            collection.AddTransient<IMiniAppsSDKInitializationService, MiniAppsSDKInitializationService>();
-        }
-
-        public static void InitializeMiniAppsSdk(this IServiceProvider serviceProvider)
-        {
-            ServerServiceProvider.Initialize(serviceProvider);
-        }
-
-        private static void UseResourcesServerServices(IServiceCollection collection)
         {
             collection.AddSingleton<IServerFileStorageManager, ServerFileStorageManager>();
             collection.AddSingleton<StorageResourceGetController>();
@@ -28,6 +17,8 @@ namespace HttpsServer.DependencyInjection
             collection.AddSingleton<PreflightController>();
             collection.AddSingleton<CorsMiddleware>();
             collection.AddSingleton<HttpsServer>();
+
+            collection.AddTransient<IServerInitializationService, ServerInitializationService>();
         }
     }
 }

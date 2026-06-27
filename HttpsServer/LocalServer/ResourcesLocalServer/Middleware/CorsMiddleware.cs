@@ -1,7 +1,7 @@
-﻿using HttpsServer.LocalServer.Core.Models.Responses;
+﻿using HttpsServerWinUI.LocalServer.Core.Models.Responses;
 using System.Threading.Tasks;
 
-namespace HttpsServer.LocalServer.Core.Middleware
+namespace HttpsServerWinUI.LocalServer.Core.Middleware
 {
     internal class CorsMiddleware : IServerResponseMiddleware
     {

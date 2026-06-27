@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using HttpsServer.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
 
-namespace HttpsServer.LocalServer.Core.Middleware
+namespace HttpsServerWinUI.LocalServer.Core.Middleware
 {
     internal class ContentLengthHeaderMiddleware : IServerResponseMiddleware
     {

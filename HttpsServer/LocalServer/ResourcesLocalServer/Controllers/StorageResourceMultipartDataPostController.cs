@@ -2,13 +2,13 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using HttpMultipartParser;
-using HttpsServer.LocalServer.Constants;
-using HttpsServer.LocalServer.Core.Controllers;
-using HttpsServer.LocalServer.Core.Models;
-using HttpsServer.LocalServer.Core.Models.Responses;
-using HttpsServer.LocalServer.Managers;
+using HttpsServerWinUI.LocalServer.Constants;
+using HttpsServerWinUI.LocalServer.Core.Controllers;
+using HttpsServerWinUI.LocalServer.Core.Models;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Managers;
 
-namespace HttpsServer.LocalServer.ResourcesLocalServer.Controllers
+namespace HttpsServerWinUI.LocalServer.ResourcesLocalServer.Controllers
 {
     internal class StorageResourceMultipartDataPostController : ServerController
     {

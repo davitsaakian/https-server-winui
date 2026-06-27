@@ -1,4 +1,4 @@
-﻿namespace HttpsServer.LocalServer.Core.Models.Responses
+﻿namespace HttpsServerWinUI.LocalServer.Core.Models.Responses
 {
     internal class BadRequestResponse : ResponseModel
     {

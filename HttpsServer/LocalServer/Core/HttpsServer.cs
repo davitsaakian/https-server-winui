@@ -9,14 +9,14 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using HttpsServer.LocalServer.Core.Controllers;
-using HttpsServer.LocalServer.Core.Managers;
-using HttpsServer.LocalServer.Core.Middleware;
-using HttpsServer.LocalServer.Core.Models;
-using HttpsServer.LocalServer.Core.Models.Responses;
-using HttpsServer.LocalServer.Core.Services;
+using HttpsServerWinUI.LocalServer.Core.Controllers;
+using HttpsServerWinUI.LocalServer.Core.Managers;
+using HttpsServerWinUI.LocalServer.Core.Middleware;
+using HttpsServerWinUI.LocalServer.Core.Models;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Core.Services;
 
-namespace HttpsServer.LocalServer.Core
+namespace HttpsServerWinUI.LocalServer.Core
 {
     public class HttpsServer : TcpServer
     {

@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using HttpsServer.LocalServer.Core.Models;
+using HttpsServerWinUI.LocalServer.Core.Models;
 
-namespace HttpsServer.LocalServer.Core.Services
+namespace HttpsServerWinUI.LocalServer.Core.Services
 {
     internal class RequestModelCreator
     {

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace HttpsServer.LocalServer.Constants
+namespace HttpsServerWinUI.LocalServer.Constants
 {
     public static class LocalServerConstants
     {

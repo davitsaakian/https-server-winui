@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using HttpsServer.LocalServer.Core.Models;
-using HttpsServer.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Core.Models;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
 
-namespace HttpsServer.LocalServer.Core.Controllers
+namespace HttpsServerWinUI.LocalServer.Core.Controllers
 {
     public abstract class ServerController
     {

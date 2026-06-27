@@ -1,10 +1,10 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using HttpsServer.LocalServer.Core.Controllers;
-using HttpsServer.LocalServer.Core.Models;
-using HttpsServer.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Core.Controllers;
+using HttpsServerWinUI.LocalServer.Core.Models;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
 
-namespace HttpsServer.LocalServer.ResourcesLocalServer.Controllers
+namespace HttpsServerWinUI.LocalServer.ResourcesLocalServer.Controllers
 {
     internal class PreflightController : ServerController
     {

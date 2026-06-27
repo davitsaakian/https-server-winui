@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Text;
-using HttpsServer.LocalServer.Core.Models.Responses;
+using HttpsServerWinUI.LocalServer.Core.Models.Responses;
 
-namespace HttpsServer.LocalServer.Core.Services
+namespace HttpsServerWinUI.LocalServer.Core.Services
 {
     internal class ResponseStringCreator
     {

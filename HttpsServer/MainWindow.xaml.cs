@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 
-namespace HttpsServer
+namespace HttpsServerWinUI
 {
     public sealed partial class MainWindow : Window
     {

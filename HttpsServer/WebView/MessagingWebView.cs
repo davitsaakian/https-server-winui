@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using HttpsServer.LocalServer.Constants;
-using HttpsServer.LocalServer.Core.Managers;
+using HttpsServerWinUI.LocalServer.Constants;
+using HttpsServerWinUI.LocalServer.Core.Managers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 
-namespace HttpsServer.WebView
+namespace HttpsServerWinUI.WebView
 {
     internal partial class MessagingWebView : WebView2
     {

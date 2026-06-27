@@ -7,7 +7,7 @@ using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace HttpsServer.LocalServer.Managers
+namespace HttpsServerWinUI.LocalServer.Managers
 {
     internal class ServerFileStorageManager : IServerFileStorageManager
     {
