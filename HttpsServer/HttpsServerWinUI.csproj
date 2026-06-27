@@ -14,7 +14,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-      <Content Remove="Assets\HttpsCertificates\localhostCertificate.pfx" />
+      <None Remove="Assets\HttpsCertificates\localhostCertificate.pfx" />
     </ItemGroup>
 
     <ItemGroup>
