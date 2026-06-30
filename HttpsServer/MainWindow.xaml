@@ -13,5 +13,23 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid></Grid>
+    <Grid ColumnDefinitions="*, *">
+        <Grid RowDefinitions="auto, auto">
+            <Button Content="Upload file from App" Click="{x:Bind UploadFileFromApp}" Grid.Row="0" />
+            <Button Content="Upload file from WebView" Grid.Row="1" />
+        </Grid>
+        <Grid Grid.Column="1">
+            <ListView SelectionMode="None" ItemsSource="{x:Bind Items}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind}" />
+                            <Button Content="Show in app" />
+                            <Button Content="Show in WebView" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </Grid>
 </Window>
