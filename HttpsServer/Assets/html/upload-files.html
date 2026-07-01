@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multipart Upload Tester</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #171a1f;
+      --muted: #5e6673;
+      --border: #d7dce3;
+      --accent: #1463ff;
+      --accent-strong: #0647c9;
+      --danger: #b3261e;
+      --success: #147d3f;
+      --code-bg: #101318;
+      --code-text: #f2f5f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111418;
+        --panel: #191e24;
+        --text: #f2f5f9;
+        --muted: #a8b0bc;
+        --border: #333b46;
+        --accent: #6ea1ff;
+        --accent-strong: #9bbfff;
+        --danger: #ffb4ab;
+        --success: #86d39f;
+        --code-bg: #0b0d10;
+        --code-text: #f2f5f9;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(680px, calc(100% - 20px));
+      margin: 12px auto;
+    }
+
+    h1 {
+      margin: 0 0 3px;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 10px;
+      color: var(--muted);
+    }
+
+    form,
+    .result {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 650;
+    }
+
+    input,
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    input[type="url"],
+    input[type="text"] {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 7px;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--panel), var(--bg) 45%);
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+    }
+
+    .field:first-child {
+      grid-column: 1 / -1;
+    }
+
+    .field {
+      margin-bottom: 0;
+    }
+
+    .hint {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    button {
+      min-height: 32px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 5px 11px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--accent-strong);
+    }
+
+    button:disabled {
+      opacity: 0.62;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 18px;
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    .status.ok {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .result {
+      margin-top: 8px;
+    }
+
+    .result h2 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    pre {
+      min-height: 84px;
+      max-height: 180px;
+      overflow: auto;
+      margin: 0;
+      border-radius: 4px;
+      padding: 8px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+
+    @media (max-width: 560px) {
+      .fields {
+        grid-template-columns: 1fr;
+      }
+
+      .field:first-child {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Multipart Upload Tester</h1>
+    <p>POST files to your local HTTPS storage endpoint and inspect the server response.</p>
+
+    <form id="uploadForm" method="post" enctype="multipart/form-data" action="https://localhost:4000/storage">
+      <div class="fields">
+        <div class="field">
+          <label for="endpoint">Endpoint</label>
+          <input id="endpoint" name="endpoint" type="url" value="https://localhost:4000/storage" required>
+        </div>
+
+        <div class="field">
+          <label for="files">Files</label>
+          <input id="files" name="files" type="file" multiple required>
+          <div class="hint">Stored by multipart filename.</div>
+        </div>
+
+        <div class="field">
+          <label for="filenameOverride">Filename override</label>
+          <input id="filenameOverride" name="filenameOverride" type="text" placeholder="example.txt">
+          <div class="hint">Only for one selected file.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="submitButton" type="submit">Upload</button>
+        <button class="secondary" id="resetButton" type="button">Clear</button>
+        <span class="status" id="status" role="status" aria-live="polite">Ready</span>
+      </div>
+    </form>
+
+    <section class="result" aria-labelledby="resultTitle">
+      <h2 id="resultTitle">Response</h2>
+      <pre id="responseOutput">No request sent yet.</pre>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const endpointInput = document.getElementById("endpoint");
+    const filesInput = document.getElementById("files");
+    const filenameOverrideInput = document.getElementById("filenameOverride");
+    const submitButton = document.getElementById("submitButton");
+    const resetButton = document.getElementById("resetButton");
+    const statusText = document.getElementById("status");
+    const responseOutput = document.getElementById("responseOutput");
+
+    function setStatus(message, type) {
+      statusText.textContent = message;
+      statusText.className = type ? `status ${type}` : "status";
+    }
+
+    function isValidFileName(fileName) {
+      return Boolean(fileName)
+        && !fileName.includes("..")
+        && !/[<>:"/\\|?*\u0000-\u001f]/.test(fileName);
+    }
+
+    function createUploadPayload() {
+      const files = Array.from(filesInput.files);
+      const override = filenameOverrideInput.value.trim();
+      const formData = new FormData();
+      const fileIds = [];
+
+      if (override && files.length !== 1) {
+        throw new Error("Filename override can only be used with exactly one selected file.");
+      }
+
+      for (const file of files) {
+        const fileName = override || file.name;
+
+        if (!isValidFileName(fileName)) {
+          throw new Error(`Invalid filename for server storage: ${fileName}`);
+        }
+
+        formData.append("files", file, fileName);
+        fileIds.push(fileName);
+      }
+
+      return { formData, fileIds };
+    }
+
+    function formatHeaders(headers) {
+      const lines = [];
+      headers.forEach((value, key) => {
+        lines.push(`${key}: ${value}`);
+      });
+      return lines.length ? lines.join("\n") : "(no response headers visible)";
+    }
+
+    function postUploadedFileIds(fileIds) {
+      if (!window.chrome || !window.chrome.webview) {
+        return;
+      }
+
+      for (const fileId of fileIds) {
+        window.chrome.webview.postMessage(fileId);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      submitButton.disabled = true;
+      setStatus("Uploading...", "");
+      responseOutput.textContent = "Sending request...";
+
+      try {
+        const { formData, fileIds } = createUploadPayload();
+        const response = await fetch(endpointInput.value, {
+          method: "POST",
+          body: formData
+        });
+
+        const bodyText = await response.text();
+        const output = [
+          `HTTP ${response.status} ${response.statusText || ""}`.trim(),
+          "",
+          formatHeaders(response.headers),
+          "",
+          bodyText || "(empty body)"
+        ].join("\n");
+
+        responseOutput.textContent = output;
+        setStatus(response.ok ? "Upload complete" : "Upload failed", response.ok ? "ok" : "error");
+
+        if (response.ok) {
+          postUploadedFileIds(fileIds);
+        }
+      } catch (error) {
+        responseOutput.textContent = error && error.stack ? error.stack : String(error);
+        setStatus("Request error", "error");
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    resetButton.addEventListener("click", () => {
+      filesInput.value = "";
+      filenameOverrideInput.value = "";
+      responseOutput.textContent = "No request sent yet.";
+      setStatus("Ready", "");
+      submitButton.disabled = false;
+    });
+  </script>
+</body>
+</html>

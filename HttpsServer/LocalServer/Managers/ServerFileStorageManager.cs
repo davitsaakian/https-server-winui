@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,9 +63,9 @@ namespace HttpsServerWinUI.LocalServer.Managers
             return buffer.ToArray();
         }
 
-        public async Task<string?> GetFilePath(string id)
+        public string GetFolderPath()
         {
-            return (await GetStorageFile(id))?.Path;
+            return Path.Combine(_storageFolder.Path, SUBFOLDER_NAME);
         }
 
         private async Task<IStorageFile?> GetStorageFile(string id)

@@ -9,7 +9,7 @@ using Microsoft.Web.WebView2.Core;
 
 namespace HttpsServerWinUI.WebView
 {
-    internal partial class MessagingWebView : WebView2
+    public class MessagingWebView : WebView2
     {
         public MessagingWebView()
         {
@@ -18,7 +18,6 @@ namespace HttpsServerWinUI.WebView
 
         public Dictionary<string, string>? AdditionalCookies { get; set; }
 
-        public event Action? OnReady;
         public event Action<string>? MessageReceived;
 
         public Task<string?> RunScript(string script)

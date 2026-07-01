@@ -9,6 +9,6 @@ namespace HttpsServerWinUI.LocalServer.Managers
         Task WriteFileAsync(string id, IRandomAccessStream stream);
         Task WriteFileAsync(string id, byte[] bytes);
         Task<byte[]?> ReadFileAsync(string id);
-        Task<string?> GetFilePath(string id);
+        string GetFolderPath();
     }
 }

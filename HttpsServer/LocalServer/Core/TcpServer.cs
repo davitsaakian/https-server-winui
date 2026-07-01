@@ -47,7 +47,7 @@ namespace HttpsServerWinUI.LocalServer.Core
                 try
                 {
                     var client = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
-                    _ = HandleClientAsync(client);
+                    await HandleClientAsync(client);
                 }
                 catch (ObjectDisposedException)
                 {

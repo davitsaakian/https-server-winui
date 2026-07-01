@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window
-    x:Class="HttpsServerWinUI.MainWindow"
+<UserControl
+    x:Class="HttpsServerWinUI.Preview.Views.WebViewControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HttpsServerWinUI"
+    xmlns:local="using:HttpsServerWinUI.Preview.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:HttpsServerWinUI.Preview.ViewModels"
+    xmlns:webview="using:HttpsServerWinUI.WebView"
     mc:Ignorable="d"
-    Title="Local HttpsServer in WinUI"
 >
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
-
-    <viewmodels:PreviewControl />
-</Window>
+    <webview:MessagingWebView x:Name="MessagingWebView" MessageReceived="{x:Bind ViewModel.WebViewMessageReceived}" />
+</UserControl>

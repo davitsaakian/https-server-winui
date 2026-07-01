@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using HttpsServerWinUI.DependencyInjection;
+using HttpsServerWinUI.Preview.ViewModels;
 using HttpsServerWinUI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
@@ -26,7 +27,7 @@ namespace HttpsServerWinUI
             InitializeComponent();
         }
 
-        public IServiceProvider Services { get; }
+        public static IServiceProvider Services { get; private set; }
 
         /// <summary>
         /// Invoked when the application is launched.
@@ -53,6 +54,9 @@ namespace HttpsServerWinUI
             var services = new ServiceCollection();
 
             services.UseMiniAppsSdkServices();
+            services.AddSingleton<PreviewControlViewModel>();
+            services.AddSingleton<WebViewControlViewModel>();
+            services.AddSingleton<ICurrentWindowService, CurrentWindowService>();
 
             return services.BuildServiceProvider();
         }
@@ -64,6 +68,7 @@ namespace HttpsServerWinUI
 
             var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
             await Services.GetService<IServerInitializationService>().Initialize(file, password);
+            Services.GetService<ICurrentWindowService>().SetCurrentWindow(_window);
         }
     }
 }
