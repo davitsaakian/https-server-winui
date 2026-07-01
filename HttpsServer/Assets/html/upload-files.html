@@ -310,7 +310,8 @@
       setStatus("Uploading...", "");
       responseOutput.textContent = "Sending request...";
 
-      try {
+        try {
+            console.log("starting request...");
         const { formData, fileIds } = createUploadPayload();
         const response = await fetch(endpointInput.value, {
           method: "POST",

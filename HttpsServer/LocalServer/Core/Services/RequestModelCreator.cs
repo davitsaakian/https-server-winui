@@ -12,69 +12,118 @@ namespace HttpsServerWinUI.LocalServer.Core.Services
     internal class RequestModelCreator
     {
         private const int MAX_BODY_SIZE = 500 * 1024 * 1024; // 500 MB
+        private const int BUFFER_SIZE = 8192; // 8 KB buffer
 
         public async Task<RequestModel> CreateRequestModel(Stream stream, CancellationToken cancellationToken = default)
         {
-            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
             var model = new RequestModel();
 
-            await SetMainRequestInfo(model, reader).ConfigureAwait(false);
+            var (headerString, leftoverBytes) = await ReadHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(headerString))
+                return model;
+
+            ParseHeaders(model, headerString);
+
             cancellationToken.ThrowIfCancellationRequested();
-            await SetHeaders(model, reader).ConfigureAwait(false);
-            cancellationToken.ThrowIfCancellationRequested();
-            await SetBody(model, stream, cancellationToken).ConfigureAwait(false);
+
+            await SetBody(model, stream, leftoverBytes, cancellationToken).ConfigureAwait(false);
 
             return model;
         }
 
-        private async Task SetMainRequestInfo(RequestModel model, StreamReader reader)
+        private async Task<(string Headers, byte[] Leftover)> ReadHeadersAsync(Stream stream, CancellationToken ct)
         {
-            var requestLine = await reader.ReadLineAsync().ConfigureAwait(false);
+            using var ms = new MemoryStream();
+            byte[] buffer = new byte[BUFFER_SIZE];
 
-            if (string.IsNullOrWhiteSpace(requestLine))
-                return;
-
-            var requestLineParts = requestLine.Split(' ');
-
-            if (requestLineParts.Length < 2)
-                return;
-
-            var method = requestLineParts[0];
-            var url = requestLineParts[1];
-
-            string path = url;
-            string? query = null;
-
-            var urlParts = url.Split('?', 2);
-            if (urlParts.Length == 2)
+            while (true)
             {
-                path = urlParts[0];
-                query = urlParts[1];
+                int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct).ConfigureAwait(false);
+                if (bytesRead == 0)
+                    break;
+
+                ms.Write(buffer, 0, bytesRead);
+                byte[] data = ms.GetBuffer();
+                int length = (int)ms.Length;
+
+                // Scan for the end of HTTP headers (\r\n\r\n)
+                int index = -1;
+                for (int i = 0; i <= length - 4; i++)
+                {
+                    if (data[i] == 13 && data[i + 1] == 10 && data[i + 2] == 13 && data[i + 3] == 10) // \r\n\r\n
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index != -1)
+                {
+                    // Headers found
+                    string headers = Encoding.UTF8.GetString(data, 0, index);
+                    int bodyStart = index + 4;
+                    int leftoverLen = length - bodyStart;
+
+                    byte[] leftover = new byte[leftoverLen];
+                    if (leftoverLen > 0)
+                    {
+                        Array.Copy(data, bodyStart, leftover, 0, leftoverLen);
+                    }
+
+                    return (headers, leftover);
+                }
             }
 
-            var queryParameters = string.IsNullOrEmpty(query) ? [] : HttpUtility.ParseQueryString(query);
-
-            model.Method = new HttpMethod(method);
-            model.LocalUrl = path;
-            model.QueryParameters = queryParameters;
+            return (ms.Length > 0 ? Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length) : "", Array.Empty<byte>());
         }
 
-        private async Task SetHeaders(RequestModel model, StreamReader reader)
+        private void ParseHeaders(RequestModel model, string headerString)
         {
-            string line;
-            while (!string.IsNullOrWhiteSpace(line = await reader.ReadLineAsync().ConfigureAwait(false)))
+            var lines = headerString.Split(["\r\n"], StringSplitOptions.None);
+            if (lines.Length == 0)
+                return;
+
+            // Parse Request Line (Line 0)
+            var requestLineParts = lines[0].Split(' ');
+            if (requestLineParts.Length >= 2)
             {
-                var header = line.Split(':', 2);
-                if (header.Length != 2)
+                var method = requestLineParts[0];
+                var url = requestLineParts[1];
+
+                string path = url;
+                string? query = null;
+
+                var urlParts = url.Split('?', 2);
+                if (urlParts.Length == 2)
+                {
+                    path = urlParts[0];
+                    query = urlParts[1];
+                }
+
+                var queryParameters = string.IsNullOrEmpty(query) ? [] : HttpUtility.ParseQueryString(query);
+
+                model.Method = new HttpMethod(method);
+                model.LocalUrl = path;
+                model.QueryParameters = queryParameters;
+            }
+
+            // Parse Headers (Lines 1+)
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (string.IsNullOrWhiteSpace(line))
                     continue;
-                var name = header[0].Trim();
-                var value = header[1].Trim();
 
-                model.Headers.Add(name, value);
+                var header = line.Split(':', 2);
+                if (header.Length == 2)
+                {
+                    model.Headers.Add(header[0].Trim(), header[1].Trim());
+                }
             }
         }
 
-        private async Task SetBody(RequestModel model, Stream stream, CancellationToken cancellationToken = default)
+        private async Task SetBody(RequestModel model, Stream stream, byte[] leftoverBytes, CancellationToken cancellationToken)
         {
             if (!model.Headers.TryGetValue("Content-Length", out var contentLengthHeader))
                 return;
@@ -88,10 +137,19 @@ namespace HttpsServerWinUI.LocalServer.Core.Services
             byte[] bytesData = new byte[contentLength];
             int totalRead = 0;
 
+            if (leftoverBytes.Length > 0)
+            {
+                int toCopy = Math.Min(leftoverBytes.Length, contentLength);
+                Array.Copy(leftoverBytes, 0, bytesData, 0, toCopy);
+                totalRead += toCopy;
+            }
+
             while (totalRead < contentLength)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                int bytesRead = await stream.ReadAsync(bytesData, totalRead, contentLength - totalRead).ConfigureAwait(false);
+
+                int bytesRead = await stream.ReadAsync(bytesData.AsMemory(totalRead, contentLength - totalRead), cancellationToken).ConfigureAwait(false);
+
                 if (bytesRead == 0)
                     break;
 

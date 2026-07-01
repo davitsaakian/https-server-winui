@@ -67,17 +67,28 @@ namespace HttpsServerWinUI.LocalServer.Core
             _responseMiddleware.Insert(0, middleware);
         }
 
-        protected override async Task HandleClientStreamAsync(NetworkStream stream)
+        protected override async Task HandleClientStreamAsync(NetworkStream stream, CancellationToken serverCancellationToken)
         {
-            using var cts = new CancellationTokenSource(RequestTimeout);
+            using var timeoutCts = new CancellationTokenSource(RequestTimeout);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(serverCancellationToken, timeoutCts.Token);
+
             using var sslStream = new SslStream(stream, false);
+
             try
             {
-                await AuthenticateSslStream(sslStream).ConfigureAwait(false);
+                var sslOptions = new SslServerAuthenticationOptions
+                {
+                    ServerCertificate = _certificate,
+                    ClientCertificateRequired = false,
+                    EnabledSslProtocols = SslProtocols.Tls12,
+                    CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
+                };
+
+                await sslStream.AuthenticateAsServerAsync(sslOptions, linkedCts.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("[HttpsServer] SSL handshake timed out");
+                Debug.WriteLine("[HttpsServer] SSL handshake timed out or server shutting down.");
                 return;
             }
             catch (AuthenticationException ex)
@@ -91,34 +102,60 @@ namespace HttpsServerWinUI.LocalServer.Core
                 return;
             }
 
-            ResponseModel responseModel;
-            try
+            // HTTP Keep-Alive Loop
+            while (!linkedCts.Token.IsCancellationRequested)
             {
-                var requestModel = await _requestModelCreator.CreateRequestModel(sslStream, cts.Token).ConfigureAwait(false);
+                timeoutCts.CancelAfter(RequestTimeout);
 
-                if (requestModel.Method != null)
+                ResponseModel responseModel;
+                bool keepAlive = false;
+
+                try
+                {
+                    var requestModel = await _requestModelCreator.CreateRequestModel(sslStream, linkedCts.Token).ConfigureAwait(false);
+
+                    if (requestModel.Method == null)
+                        break;
+
                     Debug.WriteLine($"[HttpsServer] {requestModel.Method} {requestModel.GetFullUrl(_baseUrl)}");
 
-                foreach (var middleware in _requestMiddleware)
-                    await middleware.HandleRequest(requestModel).ConfigureAwait(false);
+                    if (requestModel.Headers.TryGetValue("Connection", out var connHeader))
+                    {
+                        keepAlive = connHeader.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+                    }
+                    else
+                    {
+                        keepAlive = true;
+                    }
 
-                responseModel = await HandleRequest(requestModel).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("[HttpsServer] Request processing timed out");
-                responseModel = new ServerErrorResponse();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[HttpsServer] Request processing failed: {ex.Message}");
-                responseModel = new ServerErrorResponse();
-            }
+                    foreach (var middleware in _requestMiddleware)
+                        await middleware.HandleRequest(requestModel).ConfigureAwait(false);
 
-            foreach (var middleware in _responseMiddleware)
-                await middleware.HandleResponse(responseModel).ConfigureAwait(false);
+                    responseModel = await HandleRequest(requestModel).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    Debug.WriteLine("[HttpsServer] Request processing timed out or server shutting down.");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[HttpsServer] Request processing failed: {ex.Message}");
+                    responseModel = new ServerErrorResponse();
+                    keepAlive = false;
+                }
 
-            await SendResponse(sslStream, responseModel).ConfigureAwait(false);
+                responseModel.Headers ??= [];
+                responseModel.Headers["Connection"] = keepAlive ? "keep-alive" : "close";
+
+                foreach (var middleware in _responseMiddleware)
+                    await middleware.HandleResponse(responseModel).ConfigureAwait(false);
+
+                await SendResponse(sslStream, responseModel).ConfigureAwait(false);
+
+                if (!keepAlive)
+                    break;
+            }
         }
 
         private Task<ResponseModel> HandleRequest(RequestModel requestModel)
@@ -164,11 +201,6 @@ namespace HttpsServerWinUI.LocalServer.Core
             {
                 Debug.WriteLine($"[HttpsServer] Socket error during response: {ex.Message}");
             }
-        }
-
-        private Task AuthenticateSslStream(SslStream stream)
-        {
-            return stream.AuthenticateAsServerAsync(_certificate, clientCertificateRequired: false, enabledSslProtocols: SslProtocols.Tls12, checkCertificateRevocation: false);
         }
     }
 }

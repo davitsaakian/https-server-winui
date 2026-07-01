@@ -14,12 +14,13 @@ namespace HttpsServerWinUI.LocalServer.Core
 
         public async Task Start(IPAddress address, int port)
         {
-            await OnStarting(address, port);
+            await OnStarting(address, port).ConfigureAwait(false);
+
             _cancelTokenSource = new CancellationTokenSource();
             _listener = new TcpListener(address, port);
             _listener.Start();
 
-            await AcceptClientsAsync().ConfigureAwait(false);
+            _ = AcceptClientsAsync(_cancelTokenSource.Token);
         }
 
         public virtual Task OnStarting(IPAddress address, int port)
@@ -34,38 +35,53 @@ namespace HttpsServerWinUI.LocalServer.Core
                 return;
 
             cts.Cancel();
+
+            try
+            {
+                _listener?.Stop();
+            }
+            catch (ObjectDisposedException) { }
+            catch (SocketException) { }
+
             cts.Dispose();
-            _listener.Stop();
+            _cancelTokenSource = null;
         }
 
-        protected abstract Task HandleClientStreamAsync(NetworkStream stream);
+        protected abstract Task HandleClientStreamAsync(NetworkStream stream, CancellationToken cancellationToken);
 
-        private async Task AcceptClientsAsync()
+        private async Task AcceptClientsAsync(CancellationToken cancellationToken)
         {
-            while (!_cancelTokenSource.Token.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
+                TcpClient client;
                 try
                 {
-                    var client = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
-                    await HandleClientAsync(client);
+                    client = await _listener.AcceptTcpClientAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException)
                 {
                     break;
                 }
+                catch (SocketException) when (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                _ = HandleClientAsync(client, cancellationToken);
             }
         }
 
-        private async Task HandleClientAsync(TcpClient client)
+        private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
         {
             try
             {
                 using (client)
                 using (var clientStream = client.GetStream())
                 {
-                    await HandleClientStreamAsync(clientStream).ConfigureAwait(false);
+                    await HandleClientStreamAsync(clientStream, cancellationToken).ConfigureAwait(false);
                 }
             }
+            catch (OperationCanceledException) { }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[TcpServer] Unhandled client error: {ex.Message}");
